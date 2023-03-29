@@ -1,0 +1,15 @@
+
+#enoughstone, #enoughresources, #warriorresources, #warriorsmaxcreate {
+    color: red;
+}
+
+#myProgress {
+    width: 10%;
+    background-color: #ddd;
+  }
+  
+  #myBar {
+    width: 0%;
+    height: 30px;
+    background-color: #4CAF50;
+  }

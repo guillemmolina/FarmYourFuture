@@ -1,0 +1,434 @@
+<!-- 
+    
+This is the first version of a clicker game done with Javascript and HTML, you're gaining some resources automatically, which can be used to
+upgrade your farm to get more resources, or to create some warriors.
+
+In the html file we can find some scripts like function, buttons with events, DOM modification, loops, etc..
+
+
+Done by: Guillem Molina
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Singleplayer "Farm you future"</title>
+    <link rel="stylesheet" type="text/css" href="css/css1.css">
+</head>
+
+<body>
+    <audio id="myAudio" controls>
+        <source src="sounds/testsong.mp3" type="audio/ogg">
+      </audio>
+
+      <button onclick="setHalfVolume()" type="button">Silence music</button>
+      <button onclick="setDecreaseVolume()" type="button">-</button>
+      <button onclick="setFullVolume()" type="button">+</button>
+      
+
+    <h1>Farm you future</h1>
+
+
+    <div id="bandit">
+        <p>Bandit camp</p>
+        <button id="banditfight">FIGHT WITH BANDITS</button>
+        <p><br></p>
+    </div>
+
+    <div>
+        <button id="buttonpopulation">BUILD A HOUSE</button>
+        <p>PRICE OF A HOUSE: 10 STONE</p>
+    </div>
+
+    <p>Population: <span id="population"></span>/<span class="maxpopulation"></span></p>
+
+    <h2>Your farmer is level <span id="farmerlvl">1</span></h2>
+
+    <div class="farmerlvlbutton">
+        <button id="btn-farmer-lvl">LVL UP FARMER</button>
+        <p id="enoughresources">Not enough population or resources to level up.</p>
+        <p>To raise to the next farmer level you need <span id="nextlvlfarmer">20</span> stone, <span
+                id="nextlvlwood">0</span> wood and <span class="maxpopulation"></span> population.</p>
+    </div>
+
+        <div id="warriorsdiv">
+        <h2>Warriors barracks</h2>
+                <p>Warrior cost: 100 stone.</p>
+                <p>Actual warriors: <span id="warriors">0</span>/<span id="maxwarriors"></span></p>
+            <div id="warriorstats">
+                </span><p>Name: <span id="warriorname"></span></p></p>
+                <p id="warriordiv">Warrior HP: <span id="warriorhp"></span>
+                </div>
+            <div id="myProgress">
+                 <div id="myBar"></div>
+            </div>
+            <br>
+                <button id="createwarrior">CREATE A WARRIOR</button> 
+                <p id="warriorresources">Not enough resources to create a warrior</p>
+                <p id="warriorsmaxcreate">You can't create more warriors, you have to increase your farmer level.</p>
+        </div>        
+
+
+    <h3>Stone level <span id="level"></span></h3>
+
+    <img id="kindofstone" src="img/1.jpg" alt="Stone" width=5%>
+
+    <h3 id="stones">0</h3>
+
+    <div class="buttonstone">
+        <button id="btn-lvl-up">LVL UP STONE</button>
+        <p id="enoughstone">Not enough stone to level up.</p>
+        
+    </div>
+
+    <p>To raise to the next level you need <span id="nextlevelstone">10</span> stone.</p>
+    <p>Stone per min: <span id="stonepermin">60</span></p>
+
+    
+
+    <h3>Wood level <span id="levelwood"></span></h3>
+    <img id="kindofwood" src="img/11.jpg" alt="Wood" width=5%>
+    <h3 id="wood">0</h3>
+    <button id="btnwood-lvl-up">LVL UP STONE</button>
+
+
+    <script type="text/javascript">
+
+        const LVL_LABEL = document.getElementById("level");
+        const LVL_FARMER_LVL = document.getElementById("farmerlvl");
+        const LVL_UP_STONE = document.getElementById("btn-lvl-up");
+        const LVL_UP_WOOD = document.getElementById("btnwood-lvl-up");
+        const LVL_UP_FARMER = document.getElementById("btn-farmer-lvl");
+        const CREATE_WARRIOR = document.getElementById("createwarrior");
+        const STONE_IMG = document.getElementById("kindofstone");
+        const RESOURCES_NEED = document.getElementById("nextlvlfarmer");
+        const LVL_POPULATION = document.getElementById("buttonpopulation");
+        const POPULATION = document.getElementById("population");
+        const HOUSE_COST = 10;
+        const WARRIOR_COST = 100;
+        const BANDIT_EVENT = document.getElementById("bandit");
+
+
+        let loopId;
+        let lvl = 1;
+        let money = 0;
+        let money2 = 5;
+        let gamespeed = 1000;
+        let gamespeed2 = 100;
+        let intervalID;
+        let isON = false;
+        let lvlupmultiplier = 1;
+        let stoneslabel = document.getElementById("stones");
+        let woodlabel = document.getElementById("wood");
+        let lvlupcost = 10;
+        let lvlupfarmercost = 20;
+        let levelsound = new Audio("sounds/levelsound.wav");
+        let levelfarmersound = new Audio("sounds/levelup.wav");
+        let populationsound = new Audio("sounds/huh.wav");
+        let maxpoblation = new Audio("sounds/poblation.m4a");
+        let testsong = new Audio("sounds/testsong.mp3");
+        let soundmusic = document.getElementById("myAudio");
+        let stonepermin;
+        let lvlfarmer = 1;
+        let population = 1;
+        let maxpopulation = 5;
+        let progressbar = 0;
+        let warriors = 0;
+        let barrack = false;
+        let maxwarriors = 0;
+        let randomtime = Math.floor(Math.random() * 2000) + 1000;
+
+
+
+        soundmusic.volume = 0.1;
+        soundmusic.play();
+
+        function setHalfVolume() { 
+            soundmusic.volume = 0;
+                                }
+   
+        function setFullVolume() { 
+             soundmusic.volume = soundmusic.volume +0.05;
+                                } 
+        function setDecreaseVolume(){ 
+             soundmusic.volume = soundmusic.volume -0.05;
+                                }  
+
+        let resources = {
+            stone: 0,
+            wood:0
+        };
+
+        
+        
+        
+
+        document.getElementById('myAudio').style.display = 'none';
+        document.getElementById('warriorsdiv').style.display = 'none';
+        document.getElementById('warriorresources').style.display = 'none';
+        document.getElementById('warriorsmaxcreate').style.display = 'none';
+        document.getElementById('bandit').style.display = 'none';
+        document.getElementById('warriorstats').style.display = 'none';
+
+
+        
+        
+        
+
+       
+
+        CREATE_WARRIOR.addEventListener("click", function () {
+
+            let warriorstats = 
+        {
+            name: "unnamed",
+            lvl: 1,
+            hp: Math.floor(Math.random() * 10),
+            dmg:0
+        };
+
+        let warriorsarray = [];
+
+        
+
+            function generate(){
+	var firstname = ["Marquis", "Samir", "Adrien", "Joyce", "Pierce", "Juliette", "Kelton", "Jacob", "Isiah", "Lindsay", "Kian", "Jordyn", "Jaquan", "Anya", "Wayne", "Khalil"];
+	var lastname= ["Mills", "Mercer", "Reeves", "Hines", "Sanford", "Irwin", "Koch", "Hinton", "Estes", "Jackson", "Lowe", "Guerra", "Pineda", "Franco", "Cowan", "Krause"];
+	var rand_first = Math.floor(Math.random()*firstname.length); 
+    var rand_last = Math.floor(Math.random()*lastname.length); 
+    return firstname[rand_first] + " " + lastname[rand_last];
+}
+
+            if(money >= WARRIOR_COST && warriors < maxwarriors){
+            if (progressbar == 0) {
+             progressbar = 1;
+             var elem = document.getElementById("myBar");
+             var width = 0;
+             var id = setInterval(frame, 100);
+
+             
+             if(warriors == 1){
+        var myVar = setInterval(randombandit, 3000);
+ 
+
+        
+
+function randombandit (){
+
+            document.getElementById('warriorstats').style.display = 'block';
+            money = money - 200;
+
+   }
+}
+
+             
+            
+
+             
+
+      
+    function frame() {
+      if (width == 100) {
+        clearInterval(id);
+        progressbar = 0;
+        money -= WARRIOR_COST;
+        warriors++;
+        document.getElementById("warriors").innerHTML = warriors;
+        elem.style.width = 0;
+        var namestest = [];
+             namestest[warriors] = generate();
+             document.getElementById("warriorname").innerHTML = namestest[warriors];
+        
+        
+        
+
+      } else {
+        width = width + 1;
+        elem.style.width = width + "%";
+        document.getElementById("warriorhp").innerHTML = warriorstats.hp;
+        document.getElementById('warriorstats').style.display = 'block';
+      }
+    }
+  }
+}else if(money < WARRIOR_COST){
+    document.getElementById('warriorresources').style.display = 'block';
+    setTimeout(function () { document.getElementById('warriorresources').style.display = 'none'; }, 3000);
+}
+else if(warriors >= maxwarriors){
+    document.getElementById('warriorsmaxcreate').style.display = 'block';
+    setTimeout(function () { document.getElementById('warriorsmaxcreate').style.display = 'none'; }, 3000);
+
+    setTimeout(function () { randombandit(); }, randomtime);
+                   document.getElementById("warriorhp").innerHTML = warriorstats.hp;
+                   document.getElementById("warriorname").innerHTML = warriorstats.name;
+                }
+                
+        warriorsarray [warriors] = warriorstats;
+
+
+   
+
+if (warriors == 1){
+    setTimeout(function () { document.getElementById('bandit').style.display = 'block';  }, randomtime);
+    }
+});
+
+
+        LVL_LABEL.textContent = lvl;
+        StartLoop();
+
+        document.getElementById("population").innerHTML = population;
+        document.querySelectorAll(".maxpopulation").forEach(item => {
+            item.innerHTML = maxpopulation;
+        });
+
+        LVL_POPULATION.addEventListener("click", function () {
+
+            if (money >= HOUSE_COST && population != maxpopulation) {
+
+                money -= HOUSE_COST;
+                UpdateCount(money);
+                population.textContent = population;
+                population++;
+                StartLoop();
+                populationsound.play();
+                populationsound.currentTime = 0;
+                document.getElementById("population").innerHTML = population;
+            }
+            else if (money >= HOUSE_COST && population == maxpopulation) {
+                maxpoblation.play();
+            }
+        });
+
+        
+        
+
+        document.getElementById('enoughstone').style.display = 'none';
+        document.getElementById('enoughresources').style.display = 'none';
+
+        LVL_UP_STONE.addEventListener("click", function () {
+            if (money >= lvlupcost) {
+                document.getElementById('enoughstone').style.display = 'none';
+                money -= lvlupcost;
+                UpdateCount(money);
+                lvlupmultiplier *= 2;
+                lvlupcost = lvlupcost * 5;
+                document.getElementById("nextlevelstone").innerHTML = lvlupcost;
+                document.getElementById("stonepermin").innerHTML = stonepermin;
+                lvl++;
+                LVL_LABEL.textContent = lvl;
+                StartLoop();
+                levelsound.play();
+                levelsound.currentTime = 0;
+                STONE_IMG.setAttribute("src", "img/" + lvl + ".jpg")
+
+            }
+            else {
+
+                document.getElementById('enoughstone').style.display = 'block';
+                setTimeout(function () { document.getElementById('enoughstone').style.display = 'none'; }, 3000);
+            }
+        });
+
+        LVL_UP_STONE.addEventListener("click", function () {
+            if (money >= lvlupcost) {
+                document.getElementById('enoughstone').style.display = 'none';
+                money -= lvlupcost;
+                UpdateCount(money);
+                lvlupmultiplier *= 2;
+                lvlupcost = lvlupcost * 5;
+                document.getElementById("nextlevelstone").innerHTML = lvlupcost;
+                document.getElementById("stonepermin").innerHTML = stonepermin;
+                lvl++;
+                LVL_LABEL.textContent = lvl;
+                StartLoop();
+                levelsound.play();
+                levelsound.currentTime = 0;
+                STONE_IMG.setAttribute("src", "img/" + lvl + ".jpg")
+
+            }
+            else {
+
+                document.getElementById('enoughstone').style.display = 'block';
+                setTimeout(function () { document.getElementById('enoughstone').style.display = 'none'; }, 3000);
+            }
+        });
+
+        
+
+        function StartLoop2() {
+            clearInterval(loopId);
+            loopId = setInterval(function () { money += lvlupmultiplier; UpdateCount2(money); }, gamespeed2);
+        }
+
+        function UpdateCount2(money) {
+            woodlabel.textContent = money;
+        }
+
+        
+
+        LVL_UP_FARMER.addEventListener("click", function () {
+            if (money >= lvlupfarmercost && population == maxpopulation) {
+
+
+                document.getElementById("nextlvlfarmer").innerHTML = lvlupfarmercost;
+                lvlfarmer++;
+                LVL_FARMER_LVL.textContent = lvlfarmer;
+                money -= lvlupfarmercost;
+                UpdateCount(money);
+                gamespeed -= 100;
+                UpdateCount(money);
+                StartLoop();
+                levelfarmersound.play();
+                levelfarmersound.currentTime = 0;
+                lvlupfarmercost = lvlupfarmercost * 5;
+                RESOURCES_NEED.textContent = lvlupfarmercost;
+                maxpopulation = maxpopulation + 14;
+                document.querySelectorAll(".maxpopulation").forEach(item => {
+                    item.innerHTML = maxpopulation;
+                });
+
+                if(lvlfarmer == 2){
+                  barrack = true;
+                    if(barrack = true){
+                        document.getElementById('warriorsdiv').style.display = 'block';
+                    }
+                          }
+                maxwarriors = maxwarriors + 2;
+                document.getElementById("maxwarriors").innerHTML = maxwarriors;
+                maxwarriors.textContent = maxwarriors;
+
+                
+                         
+          
+
+            }
+
+            else if (population != maxpopulation || money < lvlupfarmercost) {
+                document.getElementById('enoughresources').style.display = 'block';
+                setTimeout(function () { document.getElementById('enoughresources').style.display = 'none'; }, 3000);
+            }
+            
+
+            
+        });
+
+        function StartLoop() {
+            clearInterval(loopId);
+            loopId = setInterval(function () { money += lvlupmultiplier; UpdateCount(money); }, gamespeed);
+        }
+
+        function UpdateCount(money) {
+            stoneslabel.textContent = money;
+        }
+        
+
+
+
+    </script>
+
+
+</body>
+
+</html>
